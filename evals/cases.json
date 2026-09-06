@@ -1,0 +1,50 @@
+[
+  {
+    "name": "duplicate_charge",
+    "text": "You charged my card twice this month and I need a refund for the extra one.",
+    "expected_category": "billing",
+    "note": "Clear billing: duplicate charge + refund."
+  },
+  {
+    "name": "export_hangs",
+    "text": "The export button just spins forever and the file never downloads.",
+    "expected_category": "bug",
+    "note": "A feature that fails is a bug, not a feature request."
+  },
+  {
+    "name": "dark_mode_request",
+    "text": "Any chance you could add a dark mode to the dashboard? My eyes would thank you.",
+    "expected_category": "feature",
+    "note": "Request for new capability."
+  },
+  {
+    "name": "cannot_login",
+    "text": "I can't log in and the password reset email never arrives.",
+    "expected_category": "account",
+    "note": "Access/login problem -> account."
+  },
+  {
+    "name": "wrong_vat_invoice",
+    "text": "My latest invoice has the wrong VAT rate and our finance team can't process it.",
+    "expected_category": "billing",
+    "note": "Invoice/tax issue -> billing, high urgency (blocked)."
+  },
+  {
+    "name": "crash_on_startup",
+    "text": "Since the last update the app crashes immediately every time I open it.",
+    "expected_category": "bug",
+    "note": "Crash after update -> bug, high urgency."
+  },
+  {
+    "name": "vague_unsure",
+    "text": "hey it's not working, please help",
+    "expected_category": "other",
+    "note": "WHEN-UNSURE case: too vague to classify -> other with low confidence."
+  },
+  {
+    "name": "ambiguous_charge_and_error",
+    "text": "I got double charged AND the payment page throws an error when I try to fix it.",
+    "expected_category": "billing",
+    "note": "AMBIGUOUS billing-vs-bug; labelled billing because money is at stake."
+  }
+]
