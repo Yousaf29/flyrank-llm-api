@@ -1,14 +1,16 @@
 """POST /triage — classify a support message into a fixed shape.
 
-Stage 2: the prompt (a versioned file) is wired to the endpoint. The model is
-called with the user's content as a separate, JSON-encoded message. Parsing is
-naive for now — robust parse/validate/repair/quarantine arrives in Stage 3.
+Stage 3: the model's answer is treated as untrusted input. It is parsed and
+validated against the schema; a failure triggers exactly one repair retry; a
+second failure is quarantined and the caller gets a clean 422. Raw model text is
+never returned — the endpoint's contract is the schema, on success and failure.
 """
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from src import config
-from src.llm.client import complete
-from src.llm.prompt import build_messages
+from src.llm import logs
+from src.llm.parse import OutputValidationError, run_triage
+from src.llm.prompt import PROMPT_VERSION
 from src.llm.schema import STUB_OUTPUT, TriageInput, TriageOutput
 
 router = APIRouter(tags=["triage"])
@@ -20,8 +22,19 @@ def triage(body: TriageInput):
     if config.LLM_STUB:
         return STUB_OUTPUT
 
-    # Call the model with our versioned prompt + the user's walled-off content.
-    text, _usage = complete(build_messages(body.text))
-
-    # Naive parse for Stage 2 — Stage 3 makes this trustworthy.
-    return TriageOutput.model_validate_json(text)
+    try:
+        result, _meta = run_triage(body.text)
+        return result
+    except OutputValidationError as exc:
+        # Second attempt also failed: set the answer aside, never return it.
+        logs.quarantine(
+            input_text=body.text,
+            raw=exc.raw,
+            error=exc.error,
+            prompt_version=PROMPT_VERSION,
+        )
+        raise HTTPException(
+            status_code=422,
+            detail="Could not produce a valid result: the model's answer failed "
+            "validation after one repair attempt.",
+        )

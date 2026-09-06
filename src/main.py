@@ -6,6 +6,7 @@ clean, validated JSON — with a timeout, retries, a cost log and a kill switch.
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from src.routes import triage
 
@@ -29,6 +30,14 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
         status_code=400,
         content={"error": first.get("msg", "Invalid input"), "field": field},
     )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    """Return raised HTTPExceptions (e.g. 422, 504, 503) as a flat {"error": ...} body."""
+    detail = exc.detail
+    content = detail if isinstance(detail, dict) else {"error": detail}
+    return JSONResponse(status_code=exc.status_code, content=content)
 
 
 app.include_router(triage.router)
