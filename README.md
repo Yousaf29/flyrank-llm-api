@@ -138,26 +138,33 @@ Run them through the live endpoint and score on the key field (`category`):
 python -m evals.run
 ```
 
-**Result:** _`__ / 8` on category · prompt `triage-v1` · date `YYYY-MM-DD`_
-👉 **Fill this in after running against your provider.** (In `LLM_STUB=1` mode the
-harness runs but the score is meaningless — the stub always returns `bug`.) Record
-the honest number: a comparable number beats a high one, because next time you change
-the prompt you'll know if you helped or hurt.
+**Result: 7 / 8 on category** · prompt `triage-v1` · model `openrouter/free` · 2026-09-06.
+
+The one miss was `crash_on_startup`: the free model's answer failed schema
+validation twice (original + one repair), so the endpoint returned a clean **422**
+rather than a wrong answer — the quarantine path doing its job. A stronger model
+would likely pass it. Reported honestly on purpose: a comparable number beats a high
+one, because next time I change the prompt I'll know whether I helped or hurt.
+(In `LLM_STUB=1` mode the harness still runs, but the score is meaningless — the stub
+always returns `bug`, so it scores 2/8.)
 
 ## Cost
 
 Every call logs one structured line to stdout, e.g.:
 
 ```json
-{"ts":"2026-09-06T15:15:41Z","event":"llm_call","prompt_version":"triage-v1","model":"openrouter/free","input_tokens":420,"output_tokens":40,"duration_ms":830,"repairs":0}
+{"ts":"2026-09-06T15:49:04Z","event":"llm_call","prompt_version":"triage-v1","model":"openrouter/free","input_tokens":643,"output_tokens":77,"duration_ms":2337,"repairs":0}
 ```
 
-**Estimate for 10,000 requests/day:** with ~420 input + ~40 output tokens per call
-that's ~4.6M tokens/day. On the free tier that's **$0** (but capped at 50/day). On a
-paid model at, say, $0.15 / 1M input + $0.60 / 1M output, that's roughly
-`10,000 × (420 × $0.15 + 40 × $0.60) / 1,000,000 ≈ $0.87/day`.
-👉 Replace the token counts with your own cost-log numbers and your model's price
-([LLM price calculator](https://www.llm-price.com/)).
+**Measured over the eval run:** ~616 input + ~204 output tokens per call (averaged
+across the 7 successful calls), ~2.3–6.6 s each on the free model.
+
+**Estimate for 10,000 requests/day:** ~6.2M input + ~2.0M output tokens/day. On the
+free tier that's **$0** (but capped at 50/day, so 10k/day is not possible there). On a
+paid model at, say, $0.15 / 1M input + $0.60 / 1M output:
+`10,000 × (616 × $0.15 + 204 × $0.60) / 1,000,000 ≈ $2.15/day`. The biggest single
+driver here is **input tokens** — the system prompt is sent on every call — so prompt
+length is where cost optimisation would start ([LLM price calculator](https://www.llm-price.com/)).
 
 ## Project structure
 
