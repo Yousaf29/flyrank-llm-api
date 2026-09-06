@@ -1,0 +1,17 @@
+# Secrets — a key in git history is leaked forever
+.env
+
+# Quarantine + runtime logs (keep the folder, not its contents)
+logs/*.jsonl
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
